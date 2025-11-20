@@ -152,13 +152,13 @@ function updateArray(
     return array;
   }
 
-  let newArray: JsonValue[] = [];
+  const newArray: JsonValue[] = [];
   for (let i = 0; i < array.length; i++) {
     newArray[i] = i in array ? array[i] : null;
   }
 
+  // Extend array if needed
   if (arrayIndex >= newArray.length) {
-    // Extend array directly instead of creating a new one and copying
     newArray.length = arrayIndex + 1;
     // Fill the gap with nulls
     for (let i = array.length; i < arrayIndex; i++) {

@@ -195,94 +195,40 @@ export function resolveRef(
  * @returns A normalized schema or the original schema
  */
 export function normalizeUnionType(schema: JsonSchemaType): JsonSchemaType {
-  // Handle anyOf with exactly string and null (FastMCP pattern)
-  if (
-    schema.anyOf &&
-    schema.anyOf.length === 2 &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "string") &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "null")
-  ) {
-    return { ...schema, type: "string", anyOf: undefined, nullable: true };
+  // Handle anyOf with exactly two types where one is null
+  if (schema.anyOf && schema.anyOf.length === 2) {
+    let nonNullType: JsonSchemaType | null = null;
+    let hasNull = false;
+
+    for (const item of schema.anyOf) {
+      const itemSchema = item as JsonSchemaType;
+      if (itemSchema.type === "null") {
+        hasNull = true;
+      } else {
+        nonNullType = itemSchema;
+      }
+    }
+
+    if (hasNull && nonNullType && nonNullType.type) {
+      return {
+        ...schema,
+        type: nonNullType.type,
+        anyOf: undefined,
+        nullable: true,
+      };
+    }
   }
 
-  // Handle anyOf with exactly boolean and null (FastMCP pattern)
-  if (
-    schema.anyOf &&
-    schema.anyOf.length === 2 &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "boolean") &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "null")
-  ) {
-    return { ...schema, type: "boolean", anyOf: undefined, nullable: true };
-  }
-
-  // Handle anyOf with exactly number and null (FastMCP pattern)
-  if (
-    schema.anyOf &&
-    schema.anyOf.length === 2 &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "number") &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "null")
-  ) {
-    return { ...schema, type: "number", anyOf: undefined, nullable: true };
-  }
-
-  // Handle anyOf with exactly integer and null (FastMCP pattern)
-  if (
-    schema.anyOf &&
-    schema.anyOf.length === 2 &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "integer") &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "null")
-  ) {
-    return { ...schema, type: "integer", anyOf: undefined, nullable: true };
-  }
-
-  // Handle anyOf with exactly array and null (FastMCP pattern)
-  if (
-    schema.anyOf &&
-    schema.anyOf.length === 2 &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "array") &&
-    schema.anyOf.some((t) => (t as JsonSchemaType).type === "null")
-  ) {
-    return { ...schema, type: "array", anyOf: undefined, nullable: true };
-  }
-
-  // Handle array type with exactly string and null
+  // Handle array type with exactly two types where one is null
   if (
     Array.isArray(schema.type) &&
     schema.type.length === 2 &&
-    schema.type.includes("string") &&
     schema.type.includes("null")
   ) {
-    return { ...schema, type: "string", nullable: true };
-  }
-
-  // Handle array type with exactly boolean and null
-  if (
-    Array.isArray(schema.type) &&
-    schema.type.length === 2 &&
-    schema.type.includes("boolean") &&
-    schema.type.includes("null")
-  ) {
-    return { ...schema, type: "boolean", nullable: true };
-  }
-
-  // Handle array type with exactly number and null
-  if (
-    Array.isArray(schema.type) &&
-    schema.type.length === 2 &&
-    schema.type.includes("number") &&
-    schema.type.includes("null")
-  ) {
-    return { ...schema, type: "number", nullable: true };
-  }
-
-  // Handle array type with exactly integer and null
-  if (
-    Array.isArray(schema.type) &&
-    schema.type.length === 2 &&
-    schema.type.includes("integer") &&
-    schema.type.includes("null")
-  ) {
-    return { ...schema, type: "integer", nullable: true };
+    const nonNullType = schema.type.find((t) => t !== "null");
+    if (nonNullType) {
+      return { ...schema, type: nonNullType, nullable: true };
+    }
   }
 
   return schema;

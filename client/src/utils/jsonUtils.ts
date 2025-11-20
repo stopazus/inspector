@@ -152,18 +152,18 @@ function updateArray(
     return array;
   }
 
-  let newArray: JsonValue[] = [];
+  const newArray: JsonValue[] = [];
   for (let i = 0; i < array.length; i++) {
     newArray[i] = i in array ? array[i] : null;
   }
 
+  // Extend array if needed
   if (arrayIndex >= newArray.length) {
-    const extendedArray: JsonValue[] = new Array(arrayIndex).fill(null);
-    // Copy over the existing elements (now guaranteed to be dense)
-    for (let i = 0; i < newArray.length; i++) {
-      extendedArray[i] = newArray[i];
+    newArray.length = arrayIndex + 1;
+    // Fill the gap with nulls
+    for (let i = array.length; i < arrayIndex; i++) {
+      newArray[i] = null;
     }
-    newArray = extendedArray;
   }
 
   if (restPath.length === 0) {

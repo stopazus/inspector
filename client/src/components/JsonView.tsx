@@ -30,11 +30,11 @@ const JsonView = memo(
     const { copied, setCopied } = useCopy();
 
     const normalizedData = useMemo(() => {
-      return typeof data === "string"
-        ? tryParseJson(data).success
-          ? tryParseJson(data).data
-          : data
-        : data;
+      if (typeof data === "string") {
+        const parseResult = tryParseJson(data);
+        return parseResult.success ? parseResult.data : data;
+      }
+      return data;
     }, [data]);
 
     const handleCopy = useCallback(() => {

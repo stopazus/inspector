@@ -104,11 +104,11 @@ const getHttpHeaders = (req: express.Request): Record<string, string> => {
       if (Array.isArray(customHeaderNames)) {
         customHeaderNames.forEach((headerName) => {
           const lowerCaseHeaderName = headerName.toLowerCase();
-          if (req.headers[lowerCaseHeaderName] !== undefined) {
-            const value = req.headers[lowerCaseHeaderName];
+          const value = req.headers[lowerCaseHeaderName];
+          if (value !== undefined) {
             headers[headerName] = Array.isArray(value)
               ? value[value.length - 1]
-              : value;
+              : (value as string);
           }
         });
       }
@@ -563,7 +563,8 @@ app.get(
       await webAppTransport.start();
 
       (serverTransport as StdioClientTransport).stderr!.on("data", (chunk) => {
-        if (chunk.toString().includes("MODULE_NOT_FOUND")) {
+        const chunkStr = chunk.toString();
+        if (chunkStr.includes("MODULE_NOT_FOUND")) {
           // Server command not found, remove transports
           const message = "Command not found, transports removed";
           webAppTransport.send({
@@ -586,8 +587,8 @@ app.get(
         } else {
           // Inspect message and attempt to assign a RFC 5424 Syslog Protocol level
           let level;
-          let message = chunk.toString().trim();
-          let ucMsg = chunk.toString().toUpperCase();
+          let message = chunkStr.trim();
+          const ucMsg = message.toUpperCase();
           if (ucMsg.includes("DEBUG")) {
             level = "debug";
           } else if (ucMsg.includes("INFO")) {
